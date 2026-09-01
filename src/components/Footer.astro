@@ -1,0 +1,87 @@
+---
+---
+
+<footer class="site-footer">
+  <div class="shell footer__inner">
+    <a class="footer__brand" href="/" aria-label="Ismo Studios — Inicio">Ismo Studios</a>
+    <div class="footer__links">
+      <a href="mailto:ismostudios2020@gmail.com">ismostudios2020@gmail.com</a>
+      <a href="tel:+573184558792">+57 318 455 8792</a>
+      <a
+        href="https://www.instagram.com/rubensdp90"
+        target="_blank"
+        rel="noopener noreferrer">Instagram</a
+      >
+    </div>
+    <p class="footer__meta">© 2026 · Bogotá</p>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    border-top: 1px solid var(--line);
+    background: var(--bg-deep);
+    padding-block: clamp(1.6rem, 4vh, 2.6rem);
+    position: relative;
+    z-index: 2;
+  }
+
+  .footer__inner {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem 2.5rem;
+  }
+
+  .footer__brand {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 1.75rem;
+    letter-spacing: 0.05em;
+    color: var(--text);
+    text-decoration: none;
+    text-transform: uppercase;
+  }
+
+  .footer__brand:hover {
+    color: var(--accent);
+  }
+
+  .footer__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.75rem;
+  }
+
+  .footer__links a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.3s ease;
+  }
+
+  .footer__links a:hover,
+  .footer__links a:focus-visible {
+    color: var(--accent);
+  }
+
+  .footer__meta {
+    margin-left: auto;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    color: var(--text-faint);
+    white-space: nowrap;
+  }
+
+  @media (max-width: 640px) {
+    .footer__inner {
+      justify-content: center;
+      text-align: center;
+    }
+
+    .footer__meta {
+      margin-left: 0;
+      width: 100%;
+    }
+  }
+</style>

@@ -1,0 +1,181 @@
+/* =====================================================
+    motion.css — Animaciones de identidad + View Transitions
+    (pulse, fadeInUp, appear, entryPop, crossfade 0.4s)
+====================================================== */
+
+/* Crossfade corto para que el contenido permanezca perceptiblemente estable. */
+::view-transition-old(root) {
+  animation: 0.4s ease both fade-out;
+}
+
+::view-transition-new(root) {
+  animation: 0.4s ease both fade-in;
+}
+
+/* View transitions cross-document (Chrome 126+); ClientRouter
+   mantiene el crossfade en navegadores sin soporte */
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-group(*) {
+  animation-duration: 0.4s;
+}
+
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Entrada al cargar */
+@keyframes pulse {
+  from {
+    transform: scale(0.95);
+    opacity: 0.7;
+  }
+  to {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes appear {
+  from {
+    opacity: 0;
+    scale: 0.5;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+@keyframes entryPop {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pageEnter {
+  from {
+    opacity: 0.94;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes navItemIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes revealTitle {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0);
+  }
+}
+
+/* Apertura de diálogos (lightbox / modal de video) */
+@keyframes lbIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+body[data-page] main {
+  animation: pageEnter 0.45s ease both;
+}
+
+/* appear: solo con soporte de scroll-driven animations; se anima el
+   CONTENIDO interno, no la sección — así el fondo --bg-deep de About y
+   de Clientes permanece siempre visible. */
+@supports (animation-timeline: view()) {
+  .about__grid,
+  .clients__grid {
+    animation: appear 5s linear;
+    animation-timeline: view();
+    animation-range: entry 0% cover 40%;
+  }
+
+  .clients h2 {
+    animation: revealTitle 0.9s ease both;
+    animation-timeline: view();
+    animation-range: entry 10% cover 35%;
+  }
+}
+
+/* =====================================================
+    prefers-reduced-motion: sin intro, sin video, sin animaciones
+====================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  #welcome-overlay {
+    display: none;
+  }
+
+  .bgVideo video {
+    display: none;
+  }
+
+  .about__grid,
+  .clients__grid {
+    opacity: 1 !important;
+    scale: 1 !important;
+    animation: none !important;
+  }
+
+  body[data-page] main {
+    animation: none !important;
+    transform: none !important;
+  }
+
+  .clients h2 {
+    clip-path: inset(0) !important;
+  }
+}

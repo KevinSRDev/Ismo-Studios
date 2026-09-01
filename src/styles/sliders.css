@@ -1,0 +1,274 @@
+/* =====================================================
+    sliders.css — Fotogalería (/fotos): fotos protagonistas
+    sobre el lienzo oscuro suave del sistema (tokens en base.css)
+====================================================== */
+
+html.lb-open,
+html.lb-open body {
+  overflow: hidden;
+}
+
+main.gallery {
+  width: 100%;
+  position: relative;
+  padding-top: 108px; /* header fijo */
+  padding-bottom: var(--section-y);
+}
+
+.gallery__head {
+  padding-top: clamp(1.5rem, 4vw, 3rem);
+}
+
+.gallery__head .section-head {
+  gap: 1.25rem;
+}
+
+/*===================================================
+    Slider
+====================================================*/
+.slider {
+  position: relative;
+  padding-top: clamp(3rem, 7vw, 5.5rem);
+}
+
+.slider__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+/* Viewport: sangrado completo al canto del viewport */
+.slider__viewport {
+  position: relative;
+  width: 100%;
+}
+
+.slider__track {
+  display: flex;
+  gap: clamp(0.75rem, 2vw, 1.75rem);
+  list-style: none;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: clamp(1.25rem, 3vw, 2.5rem) var(--gutter);
+  overscroll-behavior-x: contain;
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 clamp(1.25rem, 4vw, 3rem),
+    #000 calc(100% - clamp(1.25rem, 4vw, 3rem)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 clamp(1.25rem, 4vw, 3rem),
+    #000 calc(100% - clamp(1.25rem, 4vw, 3rem)),
+    transparent 100%
+  );
+}
+
+.slider__track::-webkit-scrollbar {
+  display: none;
+}
+
+.slider__track.dragging {
+  scroll-snap-type: none;
+  scroll-behavior: auto;
+  cursor: grabbing;
+  user-select: none;
+}
+
+/* Tarjeta: el botón llena la tarjeta; el retrato decide el ancho */
+.card {
+  flex: 0 0 auto;
+  scroll-snap-align: center;
+  animation: fadeInUp 0.6s ease calc(var(--i, 0) * 90ms) both;
+}
+
+.card__open {
+  position: relative;
+  display: block;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: zoom-in;
+  -webkit-user-select: none;
+  user-select: none;
+  transform: translateZ(0);
+  outline-offset: 6px;
+}
+
+.card__open img {
+  display: block;
+  width: auto;
+  height: min(62dvh, 68vw);
+  max-width: 88vw;
+  object-fit: contain;
+  pointer-events: none;
+  transform: translateZ(0);
+  transition: transform 900ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 500ms ease;
+  box-shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.65);
+}
+
+/* Hover zoom: transición limpia (sin animación scroll-driven que la pise) */
+@media (hover: hover) {
+  .card__open:hover img {
+    transform: scale(1.03) translateZ(0);
+    box-shadow: 0 34px 80px -26px rgba(0, 0, 0, 0.8);
+  }
+}
+
+.card__open:focus-visible img {
+  transform: scale(1.03) translateZ(0);
+}
+
+/* Serie vertical: altura dominante en vez de ancho */
+.slider[data-slider='s2'] .card__open img {
+  height: min(72dvh, 120vw);
+  width: auto;
+}
+
+/* Caption inferior: hairline + meta, sin velos pesados */
+.card__info {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--line);
+}
+
+.card__title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.25rem, 2vw, 1.6rem);
+  letter-spacing: 0.05em;
+  color: var(--text);
+  text-transform: uppercase;
+}
+
+.card__count {
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Barra de progreso + contador */
+.slider__foot {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-top: clamp(0.5rem, 2vw, 1.25rem);
+}
+
+.slider__bar {
+  position: relative;
+  flex: 1;
+  height: 3px;
+  background: var(--line);
+  overflow: hidden;
+  border-radius: 999px;
+}
+
+.slider__bar span {
+  position: absolute;
+  inset: 0;
+  transform-origin: left;
+  transform: scaleX(0);
+  background: var(--accent);
+}
+
+.slider__count {
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.slider__count b {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/*=====================================================
+    Responsive
+======================================================*/
+@media (max-width: 640px) {
+  main.gallery {
+    padding-top: 88px;
+  }
+
+  .slider__track {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  .card__open img {
+    height: min(58dvh, 80vw);
+  }
+
+  .slider[data-slider='s2'] .card__open img {
+    height: min(68dvh, 92vw);
+  }
+}
+
+/* Portrait: tamaños por defecto (vgv/dvh) */
+@media (min-width: 900px) {
+  .card__open img {
+    height: min(72dvh, 62vw);
+  }
+
+  .slider[data-slider='s2'] .card__open img {
+    height: min(80dvh, 70vw);
+  }
+}
+
+/* Landscape móvil (pantalla girada): el ancho sobra, la altura escasea.
+   Se prioriza la altura y se quita el tope vw para que las fotos se vean grandes. */
+@media (orientation: landscape) and (max-height: 520px) {
+  main.gallery {
+    padding-top: 76px;
+  }
+
+  .slider {
+    padding-top: clamp(1.5rem, 4vh, 2.5rem);
+  }
+
+  .slider__track {
+    padding-block: clamp(0.75rem, 2vh, 1.25rem);
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  .card__open img {
+    height: 70dvh;
+    width: auto;
+    max-width: none;
+  }
+
+  .slider[data-slider='s2'] .card__open img {
+    height: 82dvh;
+    width: auto;
+    max-width: none;
+  }
+
+  .card__info {
+    margin-top: 0.6rem;
+    padding-top: 0.5rem;
+  }
+
+  .slider__foot {
+    margin-top: 0.6rem;
+  }
+}

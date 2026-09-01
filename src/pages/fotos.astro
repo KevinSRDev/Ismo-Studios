@@ -1,0 +1,32 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import SliderFotos from '../components/SliderFotos.astro';
+import PhotoLightbox from '../components/PhotoLightbox.astro';
+import Footer from '../components/Footer.astro';
+import '../styles/sliders.css';
+---
+
+<BaseLayout
+  title="Ismo Studios — Fotografía"
+  description="Galería de fotografía de Ismo Studios: paisajes, verticales y horizontes."
+  page="fotos"
+>
+  <Header />
+  <main class="gallery">
+    <div class="shell gallery__head">
+      <div class="section-head" style="margin-bottom:0">
+        <h1 class="display-lg">Fotografía</h1>
+        <p class="lede">
+          Tres series, una misma mirada. Arrastra o toca una
+          imagen para verla en grande.
+        </p>
+      </div>
+    </div>
+
+    <SliderFotos>
+      <PhotoLightbox />
+    </SliderFotos>
+  </main>
+  <Footer />
+</BaseLayout>

@@ -1,0 +1,208 @@
+---
+import { getCollection } from 'astro:content';
+import { getImage } from 'astro:assets';
+import VideoCard from './VideoCard.astro';
+import VideoModal from './VideoModal.astro';
+
+const videos = (await getCollection('videos')).sort((a, b) =>
+  a.id.localeCompare(b.id)
+);
+
+// Todas las fuentes servidas por Vite (mp4 original + renditions WebM)
+const fuentes = import.meta.glob('../assets/videos/*.{mp4,webm}', {
+  eager: true,
+  query: '?url',
+  import: 'default',
+}) as Record<string, string>;
+
+const url = (archivo: string) => fuentes[`../assets/videos/${archivo}`];
+
+const cards = await Promise.all(
+  videos.map(async (v) => {
+    const thumb = await getImage({
+      src: v.data.thumb,
+      format: 'webp',
+      quality: 62,
+    });
+    const stem = v.data.video.replace(/\.mp4$/, '');
+    return {
+      titulo: v.data.titulo,
+      alt: v.data.alt ?? v.data.titulo,
+      maxima: url(v.data.video),
+      hd: url(`${stem}-hd.webm`),
+      sd: url(`${stem}-sd.webm`),
+      thumb: thumb.src,
+      width: v.data.thumb.width,
+      height: v.data.thumb.height,
+    };
+  })
+);
+---
+
+<section id="video-grid" class="video-gallery">
+  {
+    cards.map((item, i) => (
+      <VideoCard
+        titulo={item.titulo}
+        alt={item.alt}
+        maxima={item.maxima}
+        hd={item.hd}
+        sd={item.sd}
+        thumb={item.thumb}
+        width={item.width}
+        height={item.height}
+        indice={i}
+      />
+    ))
+  }
+</section>
+
+<VideoModal />
+
+<script>
+  // Spotlight + modal + selector de calidad (~6KB).
+  // Delegación en document: el módulo solo corre una vez con ClientRouter.
+  type Nivel = 'maxima' | 'hd' | 'sd';
+  const LS_KEY = 'ismo-video-calidad';
+  const grid = document.getElementById('video-grid');
+
+  const cards = () =>
+    Array.from(document.querySelectorAll<HTMLElement>('.video-card'));
+  const overlay = () =>
+    document.getElementById('video-overlay') as HTMLDialogElement | null;
+  const video = () =>
+    document.getElementById('main-video') as HTMLVideoElement | null;
+
+  /* ── Calidad ── */
+  let elegida: string = 'auto';
+  try {
+    elegida = localStorage.getItem(LS_KEY) || 'auto';
+  } catch {}
+
+  function soportaWebm(): boolean {
+    const probe = document.createElement('video');
+    return !!probe.canPlayType && probe.canPlayType('video/webm; codecs="vp9"') !== '';
+  }
+
+  function resolver(): Nivel {
+    if (elegida !== 'auto') return elegida as Nivel;
+    const c = (navigator as any).connection;
+    if (c && (c.saveData || /slow-2g|2g|3g/.test(c.effectiveType || ''))) return 'sd';
+    return soportaWebm() ? 'hd' : 'maxima';
+  }
+
+  function pintarCalidad() {
+    for (const b of document.querySelectorAll<HTMLElement>('.quality__btn')) {
+      b.classList.toggle('is-active', b.dataset.quality === elegida);
+    }
+  }
+
+  /* ── Spotlight (solo puntero fino) ── */
+  const fine = window.matchMedia('(hover: hover) and (pointer: fine)');
+  const spotlight = (g: HTMLElement, cardsArr: HTMLElement[], indice: number) => {
+    g.classList.add('dimmed');
+    cardsArr.forEach((card, i) => card.classList.toggle('featured', i === indice));
+  };
+  const limpiarSpotlight = (g: HTMLElement, cardsArr: HTMLElement[]) => {
+    g.classList.remove('dimmed');
+    cardsArr.forEach((card) => card.classList.remove('featured'));
+  };
+
+  /* ── Abrir / cerrar ── */
+  let activa: Record<string, string> | null = null; // snapshot dataset de la tarjeta
+
+  function urlNivel(): string {
+    if (!activa) return '';
+    return activa[resolver()] || activa['maxima'] || '';
+  }
+
+  function aplicarCalidad() {
+    const v = video();
+    if (!v) return;
+    const src = urlNivel();
+    if (!src || v.getAttribute('src') === src) return;
+    const t = v.currentTime;
+    const sonando = !v.paused;
+    v.src = src;
+    if (t) v.currentTime = t;
+    if (sonando) v.play().catch(() => {});
+  }
+
+  function abrir(card: HTMLElement) {
+    const o = overlay();
+    const v = video();
+    if (!o || !v) return;
+    activa = { ...card.dataset } as Record<string, string>;
+    v.src = urlNivel();
+    o.showModal();
+    v.play().catch(() => {});
+  }
+
+  function cerrar() {
+    const o = overlay();
+    const v = video();
+    if (!o || !v) return;
+    o.close();
+    v.pause();
+    v.removeAttribute('src'); // libera memoria/red
+    v.load();
+  }
+
+  document.addEventListener('click', (e) => {
+    const t = e.target as HTMLElement;
+    const q = t.closest<HTMLElement>('.quality__btn');
+    if (q) {
+      elegida = q.dataset.quality || 'auto';
+      try {
+        localStorage.setItem(LS_KEY, elegida);
+      } catch {}
+      pintarCalidad();
+      aplicarCalidad();
+      return;
+    }
+    const card = t.closest<HTMLElement>('.video-card');
+    if (card) {
+      abrir(card);
+      return;
+    }
+    if (overlay()?.open && (t.closest('.close-btn') || t === overlay())) cerrar();
+  });
+
+  // Accesibilidad: Enter/Espacio abren la card foco (role=button)
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const el = e.target as HTMLElement;
+    if (el.classList?.contains('video-card')) {
+      e.preventDefault();
+      abrir(el);
+    }
+  });
+
+  // Re-conectar listeners del diálogo tras cada swap de página
+  function init() {
+    pintarCalidad();
+    const o = overlay();
+    if (!o) return;
+    o.addEventListener('cancel', (e: Event) => {
+      e.preventDefault();
+      cerrar();
+    });
+    if (!fine.matches) return;
+    cards().forEach((card, indice) => {
+      card.addEventListener('mouseenter', () => {
+        const g = grid ?? document.getElementById('video-grid');
+        if (g) spotlight(g, cards(), indice);
+      });
+      card.addEventListener('mouseleave', () => {
+        const g = grid ?? document.getElementById('video-grid');
+        if (g) limpiarSpotlight(g, cards());
+      });
+    });
+  }
+  document.addEventListener('astro:page-load', init);
+
+  // Auto: si cambia la red, re-resolver mientras el modal esté abierto
+  (navigator as any).connection?.addEventListener?.('change', () => {
+    if (elegida === 'auto' && overlay()?.open) aplicarCalidad();
+  });
+</script>

@@ -1,0 +1,84 @@
+---
+import { ClientRouter } from 'astro:transitions';
+import '@fontsource-variable/open-sans';
+import '@fontsource/bebas-neue';
+// URL real de los woff2 para el preload (Vite la resuelve y hashea)
+import openSansWoff2 from '@fontsource-variable/open-sans/files/open-sans-latin-wght-normal.woff2?url';
+import bebasWoff2 from '@fontsource/bebas-neue/files/bebas-neue-latin-400-normal.woff2?url';
+import '../styles/base.css';
+import '../styles/header.css';
+import '../styles/motion.css';
+
+import logoUrl from '../assets/brand/logo_ismo.webp';
+import BackgroundVideo from '../components/BackgroundVideo.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  page: 'home' | 'fotos' | 'videos';
+  /** Imagen crítica de la página (p. ej. poster del video de fondo) */
+  preloadImage?: string;
+}
+
+const { title, description, page, preloadImage } = Astro.props;
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <ClientRouter />
+    <!-- Fuentes locales (sin Google Fonts): preload de los woff2 + swap -->
+    <link
+      rel="preload"
+      href={openSansWoff2}
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href={bebasWoff2}
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <!-- Logo: mismo asset que el header (1 fetch) -->
+    <link rel="preload" as="image" href={logoUrl.src} fetchpriority="high" />
+    {
+      preloadImage && (
+        <link rel="preload" as="image" href={preloadImage} fetchpriority="high" />
+      )
+    }
+  </head>
+  <body data-page={page}>
+    <script is:inline>
+      // Una sola vez por documento (no se re-ejecuta en swaps de ClientRouter):
+      // marca si la carga fresca es la home → la intro solo se reproduce ahí.
+      (function () {
+        if (!window.__ismoBooted) {
+          window.__ismoBooted = true;
+          window.__ismoFreshHome =
+            location.pathname === '/' || /\/index\.html?$/i.test(location.pathname);
+        }
+      })();
+
+      // Detección temprana de redes lentas: salta la intro y desactiva el
+      // video de fondo. prefers-reduced-motion lo maneja el CSS.
+      (function () {
+        var c = navigator.connection || {};
+        if (c.saveData || /slow-2g|2g/.test(c.effectiveType || '')) {
+          document.documentElement.setAttribute('data-intro', 'skip');
+          document.documentElement.setAttribute('data-video-bg', 'off');
+        }
+      })();
+    </script>
+    <BackgroundVideo page={page} />
+    <slot />
+  </body>
+</html>

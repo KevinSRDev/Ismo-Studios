@@ -1,0 +1,15 @@
+---
+import { fade } from 'astro:transitions';
+import NavBar from './NavBar.astro';
+import logoUrl from '../assets/brand/logo_ismo.webp';
+---
+
+<!-- transition:name: view-transition-name solo en el elemento persistente (header/logo) -->
+<header transition:name="ismo-header" transition:animate={fade({ duration: '0.6s' })}>
+  <h1 class="logo-heading">
+    <a href="/" aria-label="Ismo Studios — Inicio">
+      <img src={logoUrl.src} alt="ISMO STUDIOS" width="200" />
+    </a>
+  </h1>
+  <NavBar />
+</header>

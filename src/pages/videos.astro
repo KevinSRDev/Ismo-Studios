@@ -1,0 +1,28 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import VideoGallery from '../components/VideoGallery.astro';
+import Footer from '../components/Footer.astro';
+import '../styles/videos.css';
+---
+
+<BaseLayout
+  title="Ismo Studios — Videos"
+  description="Galería de videos de Ismo Studios: piezas cinematográficas con control de calidad."
+  page="videos"
+>
+  <Header />
+  <main class="videos-page">
+    <div class="shell videos__head">
+      <div class="section-head" style="margin-bottom:0">
+        <h1 class="display-lg">Video</h1>
+        <p class="lede">
+          Piezas cinematográficas en movimiento. Elige la calidad de
+          reproducción o deja que la elijamos por ti según tu conexión.
+        </p>
+      </div>
+    </div>
+    <VideoGallery />
+  </main>
+  <Footer />
+</BaseLayout>

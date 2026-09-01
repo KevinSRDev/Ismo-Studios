@@ -1,0 +1,45 @@
+---
+interface Props {
+  titulo: string;
+  alt: string;
+  maxima: string;
+  hd: string;
+  sd: string | undefined;
+  thumb: string;
+  width: number;
+  height: number;
+  indice: number;
+}
+
+const { titulo, alt, maxima, hd, sd, thumb, width, height, indice } = Astro.props;
+---
+
+<article
+  class="video-card"
+  role="button"
+  tabindex="0"
+  data-maxima={maxima}
+  data-hd={hd}
+  data-sd={sd}
+  style={`--i: ${indice}`}
+  aria-label={`Reproducir ${titulo}`}
+>
+  <div class="thumbnail-container">
+    <img
+      src={thumb}
+      alt={alt}
+      width={width}
+      height={height}
+      loading="lazy"
+      decoding="async"
+    />
+    <div class="play-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+        <path d="M8 5.14v13.72L19 12 8 5.14Z" />
+      </svg>
+    </div>
+    <div class="video-info">
+      <h3 class="display-sm">{titulo}</h3>
+    </div>
+  </div>
+</article>

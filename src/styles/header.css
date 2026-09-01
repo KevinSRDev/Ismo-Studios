@@ -1,0 +1,230 @@
+/* =====================================================
+    header.css — Header fijo + navbar lateral (checkbox hack)
+====================================================== */
+
+header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 90;
+  width: 100%;
+  height: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem var(--gutter);
+  transition: background-color 0.3s ease;
+
+  .logo-heading {
+    margin: 0;
+    display: inline-block;
+  }
+
+  .logo-heading img {
+    display: block;
+    width: clamp(140px, 60%, 190px);
+    height: auto;
+  }
+}
+
+/*===================================================
+    Navbar
+====================================================*/
+nav {
+  height: 60px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  color: var(--text);
+
+  svg {
+    fill: currentColor;
+    width: 28px;
+    height: 28px;
+    transition: color 0.3s ease;
+  }
+
+  svg:hover {
+    color: var(--accent);
+  }
+}
+
+.linksContainer {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  position: fixed;
+  top: 0;
+  right: -100%;
+  z-index: 90;
+  width: min(320px, 86vw);
+  background-color: var(--bgNav);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border-left: 1px solid var(--line);
+  transition: 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  overflow-y: auto;
+}
+
+#sidebarActive {
+  display: none;
+}
+
+.openSidebarButton,
+.closeSidebarButton {
+  padding: 18px;
+  display: block;
+  cursor: pointer;
+}
+
+#sidebarActive:checked ~ .linksContainer {
+  right: 0;
+}
+
+#sidebarActive:checked ~ #overlay {
+  background-color: rgba(10, 10, 14, 0.5);
+  height: 100%;
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9;
+}
+
+/* Entrada escalonada de los bloques del menú */
+#sidebarActive:checked ~ .linksContainer .boxNav,
+#sidebarActive:checked ~ .linksContainer .boxContacto,
+#sidebarActive:checked ~ .linksContainer .boxRedes,
+#sidebarActive:checked ~ .linksContainer .date {
+  animation: navItemIn 0.45s ease both;
+}
+
+#sidebarActive:checked ~ .linksContainer .boxContacto {
+  animation-delay: 60ms;
+}
+
+#sidebarActive:checked ~ .linksContainer .boxRedes {
+  animation-delay: 140ms;
+}
+
+#sidebarActive:checked ~ .linksContainer .date {
+  animation-delay: 220ms;
+}
+
+.boxDatos {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 34px;
+  padding: 88px 28px 28px;
+}
+
+/* ── Links de navegación ── */
+.boxNav {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 30px;
+
+  a {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    text-decoration: none;
+    color: var(--text);
+    padding: 8px 0;
+    transition: color 0.3s ease, transform 0.3s ease;
+  }
+
+  a:hover,
+  a:focus-visible {
+    color: var(--accent);
+    transform: translateX(4px);
+  }
+
+  .boxNav__label {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 1.9rem;
+    letter-spacing: 0.04em;
+  }
+}
+
+.boxContacto,
+.boxRedes {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+
+  small {
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-size: 0.625rem;
+    color: var(--text-muted);
+    padding-bottom: 6px;
+  }
+
+  a {
+    text-decoration: none;
+    color: var(--text);
+    font-size: 0.9rem;
+    transition: color 0.3s ease;
+  }
+
+  a:hover {
+    color: var(--accent);
+  }
+
+  p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+}
+
+.date {
+  margin-top: auto;
+  padding-top: 24px;
+
+  p {
+    font-size: 0.8125rem;
+    letter-spacing: 0.08em;
+    color: var(--text-faint);
+  }
+}
+
+@media (max-width: 640px) {
+  header {
+    padding: 0.9rem 1rem;
+  }
+
+  .boxDatos {
+    padding-top: 76px;
+  }
+}
+
+/* Landscape móvil: el menú lateral debe caber en ~360px de alto */
+@media (orientation: landscape) and (max-height: 520px) {
+  header {
+    padding: 0.6rem 1rem;
+  }
+
+  .linksContainer {
+    overflow-y: auto;
+  }
+
+  .boxDatos {
+    gap: 20px;
+    padding: 64px 24px 20px;
+  }
+
+  .boxNav .boxNav__label {
+    font-size: 1.5rem;
+  }
+}

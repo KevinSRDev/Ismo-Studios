@@ -1,0 +1,27 @@
+---
+// Modal con <dialog> nativo: sin mp4 descargado al cargar
+// (preload="metadata", el src se asigna solo al abrir).
+// El selector de calidad (Auto/Máxima/HD/SD) lo controla VideoGallery.
+---
+
+<dialog id="video-overlay" class="overlay">
+  <div class="overlay__chrome">
+    <div class="quality" role="group" aria-label="Calidad de video">
+      <div class="quality__options">
+        <button type="button" class="quality__btn is-active" data-quality="auto">
+          Auto
+        </button>
+        <button type="button" class="quality__btn" data-quality="maxima">
+          Máxima
+        </button>
+        <button type="button" class="quality__btn" data-quality="hd">HD</button>
+        <button type="button" class="quality__btn" data-quality="sd">SD</button>
+      </div>
+    </div>
+    <span class="overlay__hint" aria-hidden="true">Esc para cerrar</span>
+    <button class="close-btn" aria-label="Cerrar video">&times;</button>
+  </div>
+  <div class="video-wrapper">
+    <video id="main-video" controls preload="metadata"></video>
+  </div>
+</dialog>

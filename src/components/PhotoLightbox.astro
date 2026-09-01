@@ -1,0 +1,326 @@
+---
+---
+
+<!--
+  Lightbox de fotografía: reutiliza los srcset AVIF/WebP ya generados
+  en las tarjetas (0 descargas extra: el navegador usa la caché).
+  El componente se coloca en SliderFotos vía <slot /> o en la página.
+-->
+<dialog id="lightbox" class="lightbox" aria-label="Imagen ampliada">
+  <div class="lightbox__chrome">
+    <span class="lightbox__title" data-lb-title></span>
+    <span class="lightbox__count" data-lb-count aria-hidden="true"></span>
+    <button type="button" class="lightbox__close" aria-label="Cerrar (Esc)">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 5l14 14M19 5 5 19"/></svg>
+    </button>
+  </div>
+
+  <div class="lightbox__stage" data-lb-stage>
+    <picture>
+      <source type="image/avif" data-lb-avif />
+      <source type="image/webp" data-lb-webp />
+      <img data-lb-img alt="" decoding="async" />
+    </picture>
+
+    <button type="button" class="lightbox__nav lightbox__nav--prev" data-lb-prev aria-label="Imagen anterior (←)">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M15 4.5 7.5 12l7.5 7.5"/></svg>
+    </button>
+    <button type="button" class="lightbox__nav lightbox__nav--next" data-lb-next aria-label="Imagen siguiente (→)">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M9 4.5 16.5 12 9 19.5"/></svg>
+    </button>
+  </div>
+</dialog>
+
+<style>
+  .lightbox {
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    max-height: 100%;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: rgba(10, 10, 14, 0.96);
+    color: var(--text);
+    overflow: hidden;
+  }
+
+  /* Altura recalculada al girar el móvil (dvh) con fallback a 100% */
+  @supports (height: 100dvh) {
+    .lightbox {
+      height: 100dvh;
+    }
+  }
+
+  .lightbox::backdrop {
+    background: rgba(8, 8, 12, 0.92);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+  }
+
+  .lightbox[open] {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    animation: lbIn 0.35s ease; /* keyframe global en motion.css */
+  }
+
+  .lightbox__chrome {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 1rem max(var(--gutter), env(safe-area-inset-right)) 1rem
+      max(var(--gutter), env(safe-area-inset-left));
+    border-bottom: 1px solid var(--line);
+  }
+
+  .lightbox__title {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+
+  .lightbox__count {
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .lightbox__close,
+  .lightbox__nav {
+    display: grid;
+    place-items: center;
+    background: transparent;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    color: var(--text);
+    cursor: pointer;
+    transition: border-color 0.3s ease, color 0.3s ease, transform 0.2s ease;
+  }
+
+  .lightbox__close {
+    width: 40px;
+    height: 40px;
+    font-size: 0.9rem;
+  }
+
+  .lightbox__close:hover,
+  .lightbox__nav:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .lightbox__close:active,
+  .lightbox__nav:active {
+    transform: scale(0.94);
+  }
+
+  .lightbox__stage {
+    position: relative;
+    min-height: 0;
+    padding: clamp(0.5rem, 2vw, 1.5rem);
+  }
+
+  /* Imagen que llena el escenario (absoluta) y se recorta con object-fit:
+     así SIEMPRE cabe en cualquier orientación sin depender de % de altura */
+  .lightbox__stage img {
+    position: absolute;
+    inset: clamp(0.5rem, 2vw, 1.5rem);
+    width: calc(100% - 2 * clamp(0.5rem, 2vw, 1.5rem));
+    height: calc(100% - 2 * clamp(0.5rem, 2vw, 1.5rem));
+    object-fit: contain;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+
+  .lightbox__nav {
+    position: absolute;
+    top: 50%;
+    translate: 0 -50%;
+    width: 48px;
+    height: 48px;
+    font-size: 1.6rem;
+    line-height: 1;
+  }
+
+  .lightbox__nav--prev {
+    left: max(clamp(0.5rem, 2vw, 1.5rem), env(safe-area-inset-left));
+  }
+
+  .lightbox__nav--next {
+    right: max(clamp(0.5rem, 2vw, 1.5rem), env(safe-area-inset-right));
+  }
+
+  @media (max-width: 640px) {
+    .lightbox__nav {
+      display: none; /* en móvil se navega con swipe */
+    }
+  }
+
+  /* Pantallas muy estrechas: el chrome respira mejor */
+  @media (max-width: 400px) {
+    .lightbox__chrome {
+      gap: 0.75rem;
+    }
+
+    .lightbox__count {
+      font-size: 0.6875rem;
+    }
+  }
+
+  /* Landscape móvil (pantalla girada): chrome compacto y más alto para la foto */
+  @media (orientation: landscape) and (max-height: 520px) {
+    .lightbox__chrome {
+      padding: 0.6rem max(var(--gutter), env(safe-area-inset-right)) 0.6rem
+        max(var(--gutter), env(safe-area-inset-left));
+      gap: 1rem;
+    }
+
+    .lightbox__close {
+      width: 36px;
+      height: 36px;
+    }
+
+    .lightbox__stage {
+      padding: 0.5rem;
+    }
+
+    .lightbox__nav {
+      width: 40px;
+      height: 40px;
+    }
+  }
+</style>
+
+<script>
+  // Lightbox: abre [data-lb], navega ←/→/swipe, cierra Esc (nativo <dialog>).
+  // Las referencias al DOM se consultan SIEMPRE en vivo (getters): con
+  // ClientRouter el diálogo se re-crea en cada swap y las referencias
+  // estáticas quedarían huérfanas (showModal fallaría en la 2ª visita).
+  const TOTAL_CLASE = 'lb-open';
+  let openers: HTMLElement[] = [];
+  let actual = -1;
+  let ultimoFoco: HTMLElement | null = null;
+
+  const dialog = () =>
+    document.getElementById('lightbox') as HTMLDialogElement | null;
+  const q = <T extends Element>(sel: string): T | null =>
+    dialog()?.querySelector<T>(sel) ?? null;
+
+  function mostrar(indice: number) {
+    const d = dialog();
+    const img = q<HTMLImageElement>('[data-lb-img]');
+    const srcAvif = q<HTMLSourceElement>('[data-lb-avif]');
+    const srcWebp = q<HTMLSourceElement>('[data-lb-webp]');
+    const titulo = q<HTMLElement>('[data-lb-title]');
+    const contador = q<HTMLElement>('[data-lb-count]');
+    if (!d || !img || !srcAvif || !srcWebp || !titulo || !contador) return;
+    openers = Array.from(document.querySelectorAll<HTMLElement>('[data-lb]'));
+    if (!openers.length) return;
+    actual = (indice + openers.length) % openers.length;
+    const el = openers[actual];
+
+    srcAvif.srcset = el.dataset.avif ?? '';
+    srcAvif.sizes = 'min(96vw, 1600px)';
+    srcWebp.srcset = el.dataset.webp ?? '';
+    srcWebp.sizes = 'min(96vw, 1600px)';
+    img.src = el.dataset.fallback ?? '';
+    img.alt = el.dataset.alt ?? '';
+    titulo.textContent = el.dataset.title ?? '';
+    contador.textContent = `${String(actual + 1).padStart(2, '0')} / ${String(openers.length).padStart(2, '0')}`;
+
+    // Precarga silenciosa del vecino para navegación fluida
+    const vecino = openers[(actual + 1) % openers.length];
+    if (vecino?.dataset.fallback) {
+      const pre = new Image();
+      pre.src = vecino.dataset.fallback;
+    }
+  }
+
+  function abrir(indice: number, origen: HTMLElement) {
+    const d = dialog();
+    if (!d || !d.showModal) return;
+    ultimoFoco = origen;
+    mostrar(indice);
+    d.showModal();
+    document.documentElement.classList.add(TOTAL_CLASE);
+  }
+
+  function cerrar() {
+    dialog()?.close();
+  }
+
+  // Conecta listeners al nodo de diálogo ACTUAL (nuevo en cada swap).
+  // El flag evita duplicados si se invoca dos veces sobre el mismo nodo.
+  function conectarDialogo() {
+    const d = dialog() as (HTMLDialogElement & { __lbWired?: boolean }) | null;
+    if (!d || d.__lbWired) return;
+    d.__lbWired = true;
+
+    d.addEventListener('close', () => {
+      document.documentElement.classList.remove(TOTAL_CLASE);
+      ultimoFoco?.focus();
+    });
+
+    // Swipe táctil sobre el escenario
+    const st = d.querySelector<HTMLElement>('[data-lb-stage]');
+    let x0 = 0;
+    let y0 = 0;
+    st?.addEventListener('pointerdown', (e) => {
+      x0 = e.clientX;
+      y0 = e.clientY;
+    });
+    st?.addEventListener('pointerup', (e) => {
+      const dx = e.clientX - x0;
+      const dy = e.clientY - y0;
+      if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+        mostrar(dx < 0 ? actual + 1 : actual - 1);
+      }
+    });
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    const abierto = document.documentElement.classList.contains(TOTAL_CLASE);
+    if (abierto) {
+      dialog()?.close();
+      document.documentElement.classList.remove(TOTAL_CLASE);
+    }
+    conectarDialogo();
+  });
+  conectarDialogo();
+
+  // Delegación en document: sirve para todas las tarjetas y para los
+  // controles del diálogo aunque el DOM se re-cree entre páginas.
+  document.addEventListener('click', (e) => {
+    const card = (e.target as HTMLElement).closest?.('[data-lb]') as HTMLElement | null;
+    if (card) {
+      openers = Array.from(document.querySelectorAll<HTMLElement>('[data-lb]'));
+      const i = openers.indexOf(card);
+      if (i >= 0) abrir(i, card);
+      return;
+    }
+    const d = dialog();
+    if (!d?.open) return;
+    const t = e.target as HTMLElement;
+    const st = d.querySelector('[data-lb-stage]');
+    if (t.closest('.lightbox__close')) cerrar();
+    else if (t.closest('[data-lb-prev]')) mostrar(actual - 1);
+    else if (t.closest('[data-lb-next]')) mostrar(actual + 1);
+    else if (t === d || t === st) cerrar(); // clic en el lienzo vacío
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (!dialog()?.open) return;
+    if (e.key === 'ArrowLeft') mostrar(actual - 1);
+    else if (e.key === 'ArrowRight') mostrar(actual + 1);
+    else if (e.key === 'Escape') cerrar();
+  });
+</script>

@@ -1,0 +1,16 @@
+---
+// Marcas tipográficas discretas: placeholders elegantes hasta
+// tener logos/nombres reales (sustituir este array).
+const marcas = ['Marca 01', 'Marca 02', 'Marca 03', 'Marca 04', 'Marca 05', 'Marca 06'];
+---
+
+<section class="clients">
+  <div class="shell">
+    <div class="section-head">
+      <h2 class="display-md">Confían en nuestra mirada</h2>
+    </div>
+    <div class="clients__grid">
+      {marcas.map((m) => <span class="clients__mark">{m}</span>)}
+    </div>
+  </div>
+</section>

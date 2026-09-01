@@ -1,0 +1,86 @@
+---
+const links = [
+  { href: '/', label: 'Inicio' },
+  { href: '/fotos/', label: 'Fotografía' },
+  { href: '/videos/', label: 'Video' },
+];
+---
+
+<nav class="navBar">
+  <input title="Navbar" type="checkbox" id="sidebarActive" />
+  <label for="sidebarActive" class="openSidebarButton" aria-label="Abrir menú">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      height="32"
+      viewBox="0 -960 960 960"
+      width="32"
+      fill="currentColor"
+      aria-hidden="true"
+    >
+      <path
+        d="M140-254.62v-59.99h680v59.99H140ZM140-450v-60h680v60H140Zm0-195.39v-59.99h680v59.99H140Z"
+      ></path>
+    </svg>
+  </label>
+
+  <label id="overlay" for="sidebarActive" aria-label="Cerrar menú"></label>
+  <div class="linksContainer">
+    <label for="sidebarActive" class="closeSidebarButton" aria-label="Cerrar Nav" title="Cerrar">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        height="32"
+        viewBox="0 -960 960 960"
+        width="32"
+        fill="currentColor"
+        aria-hidden="true"
+      >
+        <path
+          d="M256-213.85 213.85-256l224-224-224-224L256-746.15l224 224 224-224L746.15-704l-224 224 224 224L704-213.85l-224-224-224 224Z"
+        ></path>
+      </svg>
+    </label>
+
+    <div class="boxDatos">
+      <ul class="boxNav">
+        {
+          links.map((l) => (
+            <li>
+              <a href={l.href} aria-label={l.label}>
+                <span class="boxNav__label">{l.label}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+
+      <div class="boxContacto">
+        <small>Contacto</small>
+        <a href="mailto:ismostudios2020@gmail.com">ismostudios2020@gmail.com</a>
+        <p>+57 318 455 8792</p>
+      </div>
+      <div class="boxRedes">
+        <small>Redes</small>
+        <a href="https://www.instagram.com/rubensdp90" target="_blank" rel="noopener noreferrer"
+          >Instagram</a
+        >
+      </div>
+
+      <div class="date">
+        <p>2026, Bogotá</p>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<script is:inline data-astro-rerun>
+  // Esc cierra el menú (patrón checkbox-only)
+  (function () {
+    if (window.__ismoNavEsc) return;
+    window.__ismoNavEsc = true;
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape') return;
+      var box = document.getElementById('sidebarActive');
+      if (box && box.checked) box.checked = false;
+    });
+  })();
+</script>

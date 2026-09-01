@@ -1,0 +1,234 @@
+/* =====================================================
+    base.css — reset + design tokens (única fuente de verdad)
+    Tema oscuro suave: negro no puro + blanco hueso.
+====================================================== */
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+:root {
+  /* ── Color ───────────────────────────────────────── */
+  --bg: #101014; /* negro no puro */
+  --bg-deep: #0d0d10; /* fondos un 20% más oscuros */
+  --bg-elev: #16161c; /* superficies elevadas */
+  --bg-card: #1a1a22; /* tarjetas sobre --bg */
+  --text: #f4f4f7; /* blanco hueso suave */
+  --text-muted: #9c9ca6; /* secundario */
+  --text-faint: #6b6b75; /* terciario / meta */
+  --accent: #f59a3e; /* ámbar vivo */
+  --accent-strong: #ffad62; /* hover (más claro) */
+  --line: rgba(244, 244, 247, 0.09); /* hairlines */
+  --line-strong: rgba(244, 244, 247, 0.16);
+  --scrim: rgba(10, 10, 14, 0.78); /* velos sobre imagen */
+  --bgNav: rgba(18, 18, 24, 0.72); /* header/nav con blur */
+
+  /* ── Tipografía ──────────────────────────────────── */
+  --font-display: "Bebas Neue", "Open Sans Variable", sans-serif;
+  --font-primary: "Open Sans Variable", "Open Sans", sans-serif;
+
+  /* ── Layout / espaciado ──────────────────────────── */
+  --shell: 1280px;
+  --gutter: clamp(1.25rem, 4vw, 3rem);
+  --section-y: clamp(4rem, 10vw, 8rem);
+  --radius: 2px;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-primary);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--accent);
+  color: #101014;
+}
+
+body::-webkit-scrollbar {
+  width: 6px;
+}
+
+body::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+body::-webkit-scrollbar-thumb {
+  background-color: rgba(244, 244, 247, 0.14);
+}
+
+/*===================================================
+    Utilidades compartidas (estilo editorial)
+====================================================*/
+
+/* Contenedor de página */
+.shell {
+  width: 100%;
+  max-width: var(--shell);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* Titulares display (Bebas Neue, condensada) */
+.display-lg {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(3.5rem, 10vw, 8.5rem);
+  line-height: 0.95;
+  letter-spacing: 0.015em;
+  text-wrap: balance;
+}
+
+.display-md {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(2.4rem, 6vw, 4.5rem);
+  line-height: 1.02;
+  letter-spacing: 0.02em;
+  text-wrap: balance;
+}
+
+.display-sm {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.6rem, 3.2vw, 2.4rem);
+  line-height: 1.08;
+  letter-spacing: 0.03em;
+}
+
+/* Párrafo de lectura */
+.lede {
+  font-size: clamp(1.05rem, 1.6vw, 1.25rem);
+  font-weight: 300;
+  line-height: 1.65;
+  color: var(--text-muted);
+  max-width: 56ch;
+}
+
+
+/* Botones (tipografía display Bebas) */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.9rem;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #14140f;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease,
+    transform 0.2s ease;
+}
+
+.btn:hover,
+.btn:focus-visible {
+  background: var(--accent-strong);
+  border-color: var(--accent-strong);
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--text);
+  border-color: var(--line-strong);
+}
+
+.btn--ghost:hover,
+.btn--ghost:focus-visible {
+  background: transparent;
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Hairline */
+.hairline {
+  height: 1px;
+  border: none;
+  background: var(--line);
+}
+
+/* Encabezado de sección (título + lede) */
+.section-head {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: clamp(2rem, 4vw, 3.5rem);
+}
+
+/*===================================================
+    Video de fondo (global)
+====================================================*/
+.bgVideo {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  backface-visibility: hidden;
+}
+
+.bgVideo__media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  min-width: 100%;
+  min-height: 100%;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+body[data-page='fotos'] .bgVideo,
+body[data-page='videos'] .bgVideo {
+  opacity: 0;
+  visibility: hidden;
+}
+
+body[data-page='home'] .bgVideo {
+  opacity: 1;
+  visibility: visible;
+}
+
+@media (min-width: 768px) {
+  .bgVideo__media {
+    aspect-ratio: 9 / 16;
+    object-fit: cover;
+  }
+}
+
+/* Fallback dvh → vh para navegadores sin soporte (dvh se recalcula al girar) */
+.hero,
+.about,
+.clients {
+  min-height: 100vh;
+}
+@supports (min-height: 100dvh) {
+  .hero,
+  .about,
+  .clients {
+    min-height: 100dvh;
+  }
+}

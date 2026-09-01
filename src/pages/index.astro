@@ -1,0 +1,27 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import WelcomeIntro from '../components/WelcomeIntro.astro';
+import Header from '../components/Header.astro';
+import Hero from '../components/Hero.astro';
+import About from '../components/About.astro';
+import Clients from '../components/Clients.astro';
+import Footer from '../components/Footer.astro';
+import posterUrl from '../assets/bg/poster.webp';
+import '../styles/index.css';
+---
+
+<BaseLayout
+  title="Ismo Studios — Fotografía y Video"
+  description="Estudio audiovisual: fotografía y contenido cinematográfico que inspira, emociona y genera impacto."
+  page="home"
+  preloadImage={posterUrl.src}
+>
+  <WelcomeIntro />
+  <Header />
+  <main>
+    <Hero />
+    <About />
+    <Clients />
+  </main>
+  <Footer />
+</BaseLayout>

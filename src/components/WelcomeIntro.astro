@@ -1,0 +1,196 @@
+---
+---
+
+<!--
+  Intro de bienvenida estilo "preloader" (referencia: benjamincreative.me):
+  wordmark ISMO que escala 3.5→1 con letras que suben, y dos cortinas
+  ámbar que se separan al final revelando la página. 100% CSS (0 JS nuevo).
+  Solo se reproduce en una carga fresca de la home (window.__ismoFreshHome);
+  en navegaciones internas (ClientRouter) se elimina antes de pintar.
+-->
+<div id="welcome-overlay" aria-hidden="true">
+  <div class="intro__word">
+    <span class="intro__group">
+      <span class="intro__letter" style="--i: 0">I</span>
+      <span class="intro__letter" style="--i: 1">s</span>
+      <span class="intro__letter" style="--i: 2">m</span>
+      <span class="intro__letter" style="--i: 3">o</span>
+    </span>
+    <span class="intro__space" aria-hidden="true"></span>
+    <span class="intro__group">
+      <span class="intro__letter" style="--i: 4">S</span>
+      <span class="intro__letter" style="--i: 5">t</span>
+      <span class="intro__letter" style="--i: 6">u</span>
+      <span class="intro__letter" style="--i: 7">d</span>
+      <span class="intro__letter" style="--i: 8">i</span>
+      <span class="intro__letter" style="--i: 9">o</span>
+      <span class="intro__letter" style="--i: 10">s</span>
+    </span>
+  </div>
+  <div class="intro__curtain intro__curtain--top" aria-hidden="true"></div>
+  <div class="intro__curtain intro__curtain--bottom" aria-hidden="true"></div>
+</div>
+
+<style>
+  /* Timeline total = 2.05s. El overlay se autodescarta al final (introDone).
+     Fases: escala (0–44%), hold (44–66%), salida wordmark+cortinas (66–100%). */
+
+  #welcome-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background-color: var(--bg);
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    pointer-events: none;
+    animation: introDone 2.05s linear forwards;
+  }
+
+  /* Wordmark: single keyframe evento (evita conflicto de transform)
+     con easing segmentado: elástico en la escala, easy-in en la salida */
+  .intro__word {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: baseline;
+    animation: introWord 2.05s linear forwards;
+  }
+
+  .intro__group {
+    display: flex;
+  }
+
+  .intro__space {
+    width: 0.34em;
+  }
+
+  .intro__letter {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-weight: 400; /* Bebas Neue (un solo peso) */
+    font-size: clamp(3.4rem, 15vw, 9rem);
+    line-height: 1;
+    letter-spacing: 0.02em;
+    color: var(--text);
+    opacity: 0;
+    transform: translateY(14px);
+    animation: introLetter 0.4s ease forwards;
+    animation-delay: calc(0.35s + var(--i, 0) * 0.045s);
+  }
+
+  .intro__curtain {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 50%;
+    background: var(--accent);
+  }
+
+  .intro__curtain--top {
+    top: 0;
+    animation: curtainUp 0.7s cubic-bezier(0.76, 0, 0.24, 1) forwards;
+    animation-delay: 1.35s;
+  }
+
+  .intro__curtain--bottom {
+    bottom: 0;
+    animation: curtainDown 0.7s cubic-bezier(0.76, 0, 0.24, 1) forwards;
+    animation-delay: 1.35s;
+  }
+
+  @keyframes introWord {
+    0% {
+      transform: scale(3.5);
+      opacity: 1;
+      animation-timing-function: cubic-bezier(0.96, -0.02, 0.38, 1.01);
+    }
+    44% {
+      transform: scale(1);
+      opacity: 1;
+      animation-timing-function: linear;
+    }
+    66% {
+      transform: scale(1);
+      opacity: 1;
+      animation-timing-function: cubic-bezier(0.7, 0, 0.84, 0);
+    }
+    100% {
+      transform: translateY(-70vh);
+      opacity: 0;
+    }
+  }
+
+  @keyframes introLetter {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes curtainUp {
+    to {
+      transform: translateY(-101%);
+    }
+  }
+
+  @keyframes curtainDown {
+    to {
+      transform: translateY(101%);
+    }
+  }
+
+  @keyframes introDone {
+    0%,
+    99.9% {
+      opacity: 1;
+      visibility: visible;
+    }
+    100% {
+      opacity: 0;
+      visibility: hidden;
+    }
+  }
+
+  /* Redes lentas: si el script marcó data-intro="skip", cortar todo */
+  :global([data-intro='skip']) #welcome-overlay {
+    animation-duration: 0.01s;
+  }
+  :global([data-intro='skip']) .intro__word,
+  :global([data-intro='skip']) .intro__letter,
+  :global([data-intro='skip']) .intro__curtain {
+    animation-duration: 0.01s;
+  }
+</style>
+
+<script is:inline data-astro-rerun>
+  // Solo en carga fresca de la home (window.__ismoFreshHome), no en swaps SPA.
+  // Al saltarse se elimina antes de pintar y se marca data-intro="skip".
+  (function () {
+    var overlay = document.getElementById('welcome-overlay');
+    if (!overlay) return;
+
+    var skip =
+      window.__ismoIntroDone || // ya se reprodujo una vez en este documento (swaps SPA)
+      !window.__ismoFreshHome || // la carga fresca no fue la home (/fotos, /videos)
+      document.documentElement.getAttribute('data-intro') === 'skip' ||
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (skip) {
+      document.documentElement.setAttribute('data-intro', 'skip');
+      overlay.remove();
+      return;
+    }
+
+    window.__ismoIntroDone = true;
+
+    // Captura en document y filtra por target: las animaciones de las
+    // letras/cortinas burbujean y no deben "consumir" el listener.
+    var fin = function (event) {
+      if (event.target !== overlay) return;
+      overlay.remove();
+      document.removeEventListener('animationend', fin, true);
+    };
+    document.addEventListener('animationend', fin, true);
+  })();
+</script>

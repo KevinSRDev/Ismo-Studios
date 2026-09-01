@@ -1,0 +1,261 @@
+---
+import { getCollection } from 'astro:content';
+import { getImage } from 'astro:assets';
+
+// Colección generada en build: 0 JS para pintar la galería
+const fotos = await getCollection('fotos');
+
+const WIDTHS = [480, 720, 960, 1280, 1600]; // máximo útil 1600px
+
+// Definición editorial de cada slider
+const SLIDERS = [
+  {
+    key: 's1',
+    index: '01',
+    label: 'Panorámicas',
+    title: 'Campos abiertos',
+    sizes: '(min-width: 900px) 62vw, 92vw',
+  },
+  {
+    key: 's2',
+    index: '02',
+    label: 'Verticales',
+    title: 'Alturas',
+    sizes: '(min-width: 900px) 34vw, 72vw',
+  },
+  {
+    key: 's3',
+    index: '03',
+    label: 'Horizontes',
+    title: 'Lejanías',
+    sizes: '(min-width: 900px) 62vw, 92vw',
+  },
+] as const;
+
+async function variantes(entry: (typeof fotos)[number], sizes: string) {
+  const [avif, webp] = await Promise.all([
+    getImage({
+      src: entry.data.imagen,
+      widths: WIDTHS,
+      format: 'avif',
+      quality: 55,
+      fit: 'contain',
+    }),
+    getImage({
+      src: entry.data.imagen,
+      widths: WIDTHS,
+      format: 'webp',
+      quality: 70,
+      fit: 'contain',
+    }),
+  ]);
+  // Dimensiones reales (ratio preservado) al ancho máximo útil → 0 CLS
+  const ratio = entry.data.imagen.width / entry.data.imagen.height;
+  const ancho = WIDTHS[WIDTHS.length - 1];
+  return {
+    avif: avif.srcSet.attribute,
+    webp: webp.srcSet.attribute,
+    fallback: webp.src,
+    sizes,
+    width: ancho,
+    height: Math.round(ancho / ratio),
+    titulo: entry.data.titulo,
+    alt: entry.data.alt ?? entry.data.titulo,
+  };
+}
+
+const grupos = await Promise.all(
+  SLIDERS.map(async (s) => {
+    const items = fotos
+      .filter((f) => f.data.slider === s.key)
+      .sort((a, b) => a.data.orden - b.data.orden);
+    const total = String(items.length).padStart(2, '0');
+    const cards = await Promise.all(items.map((f) => variantes(f, s.sizes)));
+    return { ...s, cards, total };
+  })
+);
+---
+
+{
+  grupos.map((g, gi) => (
+    <section class="slider" data-slider={g.key} aria-label={`Slider ${g.label}`}>
+      <div class="shell slider__head">
+        <div class="section-head" style="margin-bottom:0">
+          <h2 class="display-md">{g.title}</h2>
+        </div>
+      </div>
+
+      <div class="slider__viewport">
+        <ul class="slider__track" id={`track-${g.key}`}>
+          {
+            g.cards.map((f, i) => (
+              <li class="card" style={`--i: ${i}`}>
+                <button
+                  type="button"
+                  class="card__open"
+                  data-lb
+                  data-title={f.titulo}
+                  data-alt={f.alt}
+                  data-avif={f.avif}
+                  data-webp={f.webp}
+                  data-fallback={f.fallback}
+                  data-group={g.key}
+                  data-pos={String(i + 1).padStart(2, '0')}
+                  data-total={g.total}
+                >
+                  <picture>
+                    <source type="image/avif" srcset={f.avif} sizes={f.sizes} />
+                    <source type="image/webp" srcset={f.webp} sizes={f.sizes} />
+                    <img
+                      src={f.fallback}
+                      srcset={f.webp}
+                      sizes={f.sizes}
+                      width={f.width}
+                      height={f.height}
+                      alt={f.alt}
+                      loading={gi === 0 && i === 0 ? 'eager' : 'lazy'}
+                      fetchpriority={gi === 0 && i === 0 ? 'high' : undefined}
+                      decoding="async"
+                      draggable="false"
+                    />
+                  </picture>
+                  <span class="card__info">
+                    <span class="card__title">{f.titulo}</span>
+                    <span class="card__count" aria-hidden="true">
+                      {String(i + 1).padStart(2, '0')} / {g.total}
+                    </span>
+                  </span>
+                </button>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+
+      <div class="shell slider__foot">
+        <div class="slider__bar" aria-hidden="true"><span data-progress></span></div>
+        <span class="slider__count" aria-hidden="true">
+          <b data-count>01</b> / {g.total}
+        </span>
+      </div>
+    </section>
+  ))
+}
+
+<slot />
+
+<script>
+  // Slider: drag (pointer), flechas, barra de progreso + contador. ~2KB.
+  // Se re-inicializa en astro:page-load (los módulos no corren dos veces
+  // con ClientRouter: el listener se registra una sola vez).
+  interface SliderRuntime {
+    track: HTMLElement;
+    bar: HTMLElement | null;
+    count: HTMLElement | null;
+    cards: HTMLElement[];
+  }
+
+  let sliders: SliderRuntime[] = [];
+
+  function activarDrag(el: HTMLElement) {
+    let activo = false;
+    let inicioX = 0;
+    let scrollInicio = 0;
+    let movido = 0;
+
+    el.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'touch') return; // touch usa scroll nativo
+      activo = true;
+      movido = 0;
+      inicioX = e.clientX;
+      scrollInicio = el.scrollLeft;
+      el.classList.add('dragging');
+      // NO capturar aún: un click simple debe llegar a la tarjeta (lightbox).
+    });
+
+    el.addEventListener('pointermove', (e) => {
+      if (!activo) return;
+      const delta = e.clientX - inicioX;
+      movido = Math.max(movido, Math.abs(delta));
+      // Capturar el puntero recién cuando empieza el arrastre de verdad.
+      if (movido > 8 && !el.hasPointerCapture?.(e.pointerId)) {
+        try {
+          el.setPointerCapture(e.pointerId);
+        } catch {}
+      }
+      el.scrollLeft = scrollInicio - delta * 1.5;
+    });
+
+    const soltar = () => {
+      activo = false;
+      el.classList.remove('dragging');
+    };
+    el.addEventListener('pointerup', soltar);
+    el.addEventListener('pointercancel', soltar);
+
+    // Suprime el clic posterior a un arrastre (evita abrir el lightbox)
+    el.addEventListener(
+      'click',
+      (e) => {
+        if (movido > 8) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      },
+      true
+    );
+  }
+
+  let pendiente = false;
+  function pintar() {
+    pendiente = false;
+    for (const s of sliders) {
+      const max = s.track.scrollWidth - s.track.clientWidth;
+      const p = max > 0 ? Math.min(1, Math.max(0, s.track.scrollLeft / max)) : 1;
+      if (s.bar) s.bar.style.transform = `scaleX(${p})`;
+      if (s.count && s.cards.length) {
+        const centro = s.track.scrollLeft + s.track.clientWidth / 2;
+        let mejor = 0;
+        let dist = Infinity;
+        s.cards.forEach((c, i) => {
+          const x = Math.abs(c.offsetLeft + c.offsetWidth / 2 - centro);
+          if (x < dist) {
+            dist = x;
+            mejor = i;
+          }
+        });
+        s.count.textContent = String(mejor + 1).padStart(2, '0');
+      }
+    }
+  }
+  function pedirPintado() {
+    if (!pendiente) {
+      pendiente = true;
+      requestAnimationFrame(pintar);
+    }
+  }
+
+  function init() {
+    sliders = [];
+    for (const s of document.querySelectorAll<HTMLElement>('.slider')) {
+      const track = s.querySelector<HTMLElement>('.slider__track');
+      if (!track) continue;
+      sliders.push({
+        track,
+        bar: s.querySelector<HTMLElement>('[data-progress]'),
+        count: s.querySelector<HTMLElement>('[data-count]'),
+        cards: Array.from(track.querySelectorAll<HTMLElement>('.card')),
+      });
+    }
+    for (const s of sliders) {
+      activarDrag(s.track);
+      s.track.addEventListener('scroll', pedirPintado, { passive: true });
+    }
+    pedirPintado();
+  }
+
+  // Listeners persistentes (una sola vez): astro:page-load también corre
+  // en la primera carga, así que init() no se invoca directo aquí.
+  window.addEventListener('resize', pedirPintado, { passive: true });
+  document.addEventListener('astro:page-load', init);
+</script>

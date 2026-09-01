@@ -1,0 +1,138 @@
+---
+import videoUrl from '../assets/bg/VideoFondo.webm';
+import posterUrl from '../assets/bg/poster.webp';
+
+interface Props {
+  page: 'home' | 'fotos' | 'videos';
+}
+
+const { page } = Astro.props;
+---
+
+<!-- Video de fondo: no se descarga hasta que el script decida reproducirlo.
+     El poster optimizado es la imagen visible desde el primer frame. -->
+<div
+  class="bgVideo"
+  aria-hidden="true"
+  data-page={page}
+  data-poster={posterUrl.src}
+  transition:persist="bg-video"
+  transition:animate="none"
+>
+  <video
+    class="bgVideo__media"
+    muted
+    loop
+    playsinline
+    disablepictureinpicture
+    preload="none"
+    poster={page === 'home' ? posterUrl.src : undefined}
+    data-bgvideo
+  >
+    <source src={videoUrl} type="video/webm" />
+  </video>
+</div>
+
+<script is:inline data-astro-rerun>
+  // El video vive en el layout y conserva su buffer con ClientRouter.
+  // El estado global evita observers y listeners duplicados al navegar.
+  (function () {
+    var key = '__ismoBackgroundVideo';
+    var state = window[key];
+
+    if (!state) {
+      state = {
+        video: null,
+        observer: null,
+        onVisibility: null,
+        onLoad: null,
+        inViewport: false,
+        loaded: document.readyState === 'complete',
+      };
+
+      state.isAllowed = function () {
+        var connection = navigator.connection || {};
+        return (
+          document.body &&
+          document.body.dataset.page === 'home' &&
+          !document.hidden &&
+          !window.matchMedia('(prefers-reduced-motion: reduce)').matches &&
+          !connection.saveData &&
+          !/slow-2g|2g/.test(connection.effectiveType || '') &&
+          document.documentElement.getAttribute('data-video-bg') !== 'off'
+        );
+      };
+
+      state.sync = function () {
+        if (!state.video) return;
+        if (state.isAllowed() && state.inViewport && state.loaded) {
+          state.video.play().catch(function () {});
+        } else {
+          state.video.pause();
+        }
+      };
+
+      state.cleanup = function () {
+        if (state.observer) state.observer.disconnect();
+        if (state.onVisibility) {
+          document.removeEventListener('visibilitychange', state.onVisibility);
+        }
+        state.observer = null;
+        state.onVisibility = null;
+        state.video = null;
+      };
+
+      state.setup = function () {
+        var next = document.querySelector('[data-bgvideo]');
+        if (!next) return;
+
+        if (document.body.dataset.page === 'home' && !next.poster) {
+          var poster = next.closest('.bgVideo')?.getAttribute('data-poster');
+          if (poster) next.poster = poster;
+        }
+
+        if (state.video !== next) {
+          state.cleanup();
+          state.video = next;
+          state.inViewport = true;
+
+          if ('IntersectionObserver' in window) {
+            state.inViewport = false;
+            state.observer = new IntersectionObserver(function (entries) {
+              state.inViewport = entries[0].isIntersecting;
+              state.sync();
+            });
+            state.observer.observe(next);
+          }
+
+          state.onVisibility = state.sync;
+          document.addEventListener('visibilitychange', state.onVisibility);
+        }
+
+        state.sync();
+      };
+
+      if (!state.loaded) {
+        state.onLoad = function () {
+          // Diferir el arranque del video: deja respirar a la red tras el LCP.
+          state.loaded = true;
+          var start = function () {
+            setTimeout(function () { state.sync(); }, 3000);
+          };
+          if ('requestIdleCallback' in window) {
+            window.requestIdleCallback(start, { timeout: 5000 });
+          } else {
+            start();
+          }
+        };
+        window.addEventListener('load', state.onLoad, { once: true });
+      }
+
+      document.addEventListener('astro:after-swap', state.sync);
+      document.addEventListener('astro:page-load', state.setup);
+      window[key] = state;
+    }
+
+    state.setup();
+  })();
+</script>
