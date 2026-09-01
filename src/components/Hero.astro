@@ -1,4 +1,8 @@
 ---
+// BASE_URL puede venir con o sin barra final según el entorno; la normalizamos.
+const base = import.meta.env.BASE_URL.endsWith('/')
+  ? import.meta.env.BASE_URL
+  : `${import.meta.env.BASE_URL}/`;
 ---
 
 <section class="hero">
@@ -7,8 +11,8 @@
     Fotografía y cine para marcas que quieren sentirse, no solo verse.
   </p>
   <div class="hero__actions">
-    <a class="btn" href="/fotos/" data-astro-prefetch="hover">Ver fotografía</a>
-    <a class="btn btn--ghost" href="/videos/" data-astro-prefetch="hover">Ver video</a>
+    <a class="btn" href={`${base}fotos/`} data-astro-prefetch="hover">Ver fotografía</a>
+    <a class="btn btn--ghost" href={`${base}videos/`} data-astro-prefetch="hover">Ver video</a>
   </div>
   <span class="hero__scroll" aria-hidden="true">Explorar</span>
 </section>

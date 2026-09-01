@@ -2,12 +2,17 @@
 import { fade } from 'astro:transitions';
 import NavBar from './NavBar.astro';
 import logoUrl from '../assets/brand/logo_ismo.webp';
+
+// BASE_URL puede venir con o sin barra final según el entorno; la normalizamos.
+const base = import.meta.env.BASE_URL.endsWith('/')
+  ? import.meta.env.BASE_URL
+  : `${import.meta.env.BASE_URL}/`;
 ---
 
 <!-- transition:name: view-transition-name solo en el elemento persistente (header/logo) -->
 <header transition:name="ismo-header" transition:animate={fade({ duration: '0.6s' })}>
   <h1 class="logo-heading">
-    <a href="/" aria-label="Ismo Studios — Inicio">
+    <a href={base} aria-label="Ismo Studios — Inicio">
       <img src={logoUrl.src} alt="ISMO STUDIOS" width="200" />
     </a>
   </h1>

@@ -21,6 +21,11 @@ interface Props {
 }
 
 const { title, description, page, preloadImage } = Astro.props;
+// BASE_URL puede venir con o sin barra final; la normalizamos para el favicon
+// y para que el script inline detecte la home con subruta (GitHub Pages).
+const base = import.meta.env.BASE_URL.endsWith('/')
+  ? import.meta.env.BASE_URL
+  : `${import.meta.env.BASE_URL}/`;
 ---
 
 <!doctype html>
@@ -28,7 +33,7 @@ const { title, description, page, preloadImage } = Astro.props;
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`} />
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
     <meta name="description" content={description} />
@@ -56,15 +61,23 @@ const { title, description, page, preloadImage } = Astro.props;
       )
     }
   </head>
-  <body data-page={page}>
+  <body data-page={page} data-base={base}>
     <script is:inline>
       // Una sola vez por documento (no se re-ejecuta en swaps de ClientRouter):
       // marca si la carga fresca es la home → la intro solo se reproduce ahí.
       (function () {
         if (!window.__ismoBooted) {
           window.__ismoBooted = true;
+          // Considera el `base` (p. ej. /Ismo-Studios/): la home fresca puede
+          // ser '/', '/index.html' o '<base>/' según dónde se publique.
+          var base = document.body.getAttribute('data-base') || '';
+          window.__ismoBase = base;
+          var path = location.pathname;
           window.__ismoFreshHome =
-            location.pathname === '/' || /\/index\.html?$/i.test(location.pathname);
+            path === '/' ||
+            path === base ||
+            /\/index\.html?$/i.test(path) ||
+            (base && path === base.replace(/\/$/, '') + '/');
         }
       })();
 
