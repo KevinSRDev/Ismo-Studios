@@ -1,32 +1,16 @@
 ---
+import logoUrl from '../assets/brand/logo_ismo.webp';
 ---
 
 <!--
   Intro de bienvenida estilo "preloader" (referencia: benjamincreative.me):
-  wordmark ISMO que escala 3.5→1 con letras que suben, y dos cortinas
+  el logo ISMO escala 3.5→1 y sale disparado hacia arriba, con dos cortinas
   ámbar que se separan al final revelando la página. 100% CSS (0 JS nuevo).
   Solo se reproduce en una carga fresca de la home (window.__ismoFreshHome);
   en navegaciones internas (ClientRouter) se elimina antes de pintar.
 -->
 <div id="welcome-overlay" aria-hidden="true">
-  <div class="intro__word">
-    <span class="intro__group">
-      <span class="intro__letter" style="--i: 0">I</span>
-      <span class="intro__letter" style="--i: 1">s</span>
-      <span class="intro__letter" style="--i: 2">m</span>
-      <span class="intro__letter" style="--i: 3">o</span>
-    </span>
-    <span class="intro__space" aria-hidden="true"></span>
-    <span class="intro__group">
-      <span class="intro__letter" style="--i: 4">S</span>
-      <span class="intro__letter" style="--i: 5">t</span>
-      <span class="intro__letter" style="--i: 6">u</span>
-      <span class="intro__letter" style="--i: 7">d</span>
-      <span class="intro__letter" style="--i: 8">i</span>
-      <span class="intro__letter" style="--i: 9">o</span>
-      <span class="intro__letter" style="--i: 10">s</span>
-    </span>
-  </div>
+  <img class="intro__logo" src={logoUrl.src} alt="" />
   <div class="intro__curtain intro__curtain--top" aria-hidden="true"></div>
   <div class="intro__curtain intro__curtain--bottom" aria-hidden="true"></div>
 </div>
@@ -47,36 +31,14 @@
     animation: introDone 2.05s linear forwards;
   }
 
-  /* Wordmark: single keyframe evento (evita conflicto de transform)
-     con easing segmentado: elástico en la escala, easy-in en la salida */
-  .intro__word {
+  /* Logo: la imagen es un bloque; se escala con introWord (3.5→1 → arriba) */
+  .intro__logo {
     position: relative;
     z-index: 2;
-    display: flex;
-    align-items: baseline;
+    display: block;
+    width: clamp(220px, 34vw, 460px);
+    height: auto;
     animation: introWord 2.05s linear forwards;
-  }
-
-  .intro__group {
-    display: flex;
-  }
-
-  .intro__space {
-    width: 0.34em;
-  }
-
-  .intro__letter {
-    display: inline-block;
-    font-family: var(--font-display);
-    font-weight: 400; /* Bebas Neue (un solo peso) */
-    font-size: clamp(3.4rem, 15vw, 9rem);
-    line-height: 1;
-    letter-spacing: 0.02em;
-    color: var(--text);
-    opacity: 0;
-    transform: translateY(14px);
-    animation: introLetter 0.4s ease forwards;
-    animation-delay: calc(0.35s + var(--i, 0) * 0.045s);
   }
 
   .intro__curtain {
@@ -121,13 +83,6 @@
     }
   }
 
-  @keyframes introLetter {
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
   @keyframes curtainUp {
     to {
       transform: translateY(-101%);
@@ -156,8 +111,7 @@
   :global([data-intro='skip']) #welcome-overlay {
     animation-duration: 0.01s;
   }
-  :global([data-intro='skip']) .intro__word,
-  :global([data-intro='skip']) .intro__letter,
+  :global([data-intro='skip']) .intro__logo,
   :global([data-intro='skip']) .intro__curtain {
     animation-duration: 0.01s;
   }
